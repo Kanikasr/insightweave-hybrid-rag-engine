@@ -51,20 +51,20 @@ def retrieve_web(query: str):
 
 # --------- Context Assembly ---------
 
-def assemble_context(query: str, route: str):
-    context = ""
+def assemble_context(query: str, route: str, use_web: bool = True):
+    context_parts = []
 
     if route in ["doc", "hybrid"]:
-        docs = retrieve_documents(query)
+        docs = retrieve_documents(query, k=3)   # LIMIT TO 3
         for i, doc in enumerate(docs):
-            context += f"[Doc {i+1}] {doc.page_content}\n\n"
+            context_parts.append(f"[Doc {i+1}] {doc.page_content[:800]}")
 
-    if route in ["web", "hybrid"]:
-        web_results = retrieve_web(query)
+    if use_web and route in ["web", "hybrid"]:
+        web_results = retrieve_web(query)[:3]    # LIMIT TO 3
         for i, result in enumerate(web_results):
-            context += f"[Web {i+1}] {result['content']}\n\n"
+            context_parts.append(f"[Web {i+1}] {result['content'][:600]}")
 
-    return context
+    return "\n\n".join(context_parts)
 
 
 # --------- Answer Generation ---------
@@ -84,22 +84,27 @@ def load_local_llm():
 
     return HuggingFacePipeline(pipeline=pipe)
 
-def answer_query(query: str):
+def answer_query(query: str, use_web: bool = True):
+
     route = classify_query(query)
-    context = assemble_context(query, route)
+    context = assemble_context(query, route, use_web)
 
     llm = load_local_llm()
 
     prompt = f"""
-Answer the question using ONLY the context below.
-Cite sources using [Doc X] and [Web Y].
+    Answer the question concisely (5–6 sentences max).
 
-Context:
-{context}
+    Rules:
+    - Do NOT repeat the same idea.
+    - Summarize instead of copying.
+    - Cite sources like [Doc 1] or [Web 1].
 
-Question:
-{query}
-"""
+    Context:
+    {context}
+
+    Question:
+    {query}
+    """
 
     response = llm.invoke(prompt)
 
