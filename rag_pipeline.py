@@ -55,7 +55,7 @@ def assemble_context(query: str, route: str, use_web: bool = True):
     context_parts = []
 
     if route in ["doc", "hybrid"]:
-        docs = retrieve_documents(query, k=3)   # LIMIT TO 3
+        docs = retrieve_documents(query, k=2)   # LIMIT TO 3
         for i, doc in enumerate(docs):
             context_parts.append(f"[Doc {i+1}] {doc.page_content[:800]}")
 
@@ -92,12 +92,16 @@ def answer_query(query: str, use_web: bool = True):
     llm = load_local_llm()
 
     prompt = f"""
-    Answer the question concisely (5–6 sentences max).
+    You are answering for a technical user.
 
-    Rules:
-    - Do NOT repeat the same idea.
-    - Summarize instead of copying.
-    - Cite sources like [Doc 1] or [Web 1].
+    TASK:
+    - First write a concise summary (4–5 sentences).
+    - Then stop.
+
+    RULES:
+    - Do NOT repeat sentences.
+    - Do NOT quote long passages.
+    - Cite sources like [Doc 1], [Doc 2].
 
     Context:
     {context}

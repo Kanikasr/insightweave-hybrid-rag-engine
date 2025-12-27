@@ -38,9 +38,11 @@ if query:
         icon = "🔀"
 
     st.markdown(f"### {icon} Answer")
-    with st.expander("🧾 Answer"):
+    with st.expander("🧾 Final Answer (Summarized)"):
         st.write(answer)
 
-    with st.expander("📚 Evidence used"):
+    with st.expander("📚 Retrieved Evidence (Raw Text)"):
+        st.write("The following text snippets were retrieved and used to ground the answer:")
         st.code(answer)
+
 
