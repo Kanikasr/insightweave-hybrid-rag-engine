@@ -11,6 +11,16 @@ INDEX_DIR = "faiss_index"
 
 
 # --------- Query Classification ---------
+import re
+
+def strip_source_tags(text: str) -> str:
+    """
+    Remove [Doc X], [Web X], and wiki-style headers from context
+    before sending to the LLM.
+    """
+    text = re.sub(r"\[(Doc|Web)\s*\d+\]", "", text)
+    text = re.sub(r"==.*?==", "", text)
+    return text
 
 def classify_query(query: str) -> str:
     query_lower = query.lower()
@@ -87,33 +97,41 @@ def load_local_llm():
 def answer_query(query: str, use_web: bool = True):
 
     route = classify_query(query)
-    context = assemble_context(query, route, use_web)
+    raw_context = assemble_context(query, route, use_web)
+    context = strip_source_tags(raw_context)
 
     llm = load_local_llm()
 
     prompt = f"""
-    You are answering for a technical user.
+Summarize the answer in 4–5 concise sentences.
 
-    TASK:
-    - First write a concise summary (4–5 sentences).
-    - Then stop.
+Rules:
+- Do NOT include document labels like [Doc 1], [Doc 2].
+- Do NOT repeat the same idea.
+- Write in clean natural language.
 
-    RULES:
-    - Do NOT repeat sentences.
-    - Do NOT quote long passages.
-    - Cite sources like [Doc 1], [Doc 2].
+Context:
+{context}
 
-    Context:
-    {context}
+Question:
+{query}
+"""
 
-    Question:
-    {query}
-    """
+    raw_answer = llm.invoke(prompt).strip()
 
-    response = llm.invoke(prompt)
+    # ----- Deterministic citation handling -----
+    citations = []
+    if route in ["doc", "hybrid"]:
+        citations.append("📄 Documents")
+    if route in ["web", "hybrid"] and use_web:
+        citations.append("🌐 Web")
+
+    citation_text = " | ".join(citations)
+
+    final_answer = f"{raw_answer}\n\n**Sources:** {citation_text}"
 
     return {
-        "answer": response,
+        "answer": final_answer,
         "route": route
     }
 
