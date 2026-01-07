@@ -1,12 +1,8 @@
 import os
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, WikipediaLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 from langchain_huggingface import HuggingFaceEmbeddings
-
-
 from langchain_community.vectorstores import FAISS
-
 from utils import load_environment
 
 DATA_DIR = "data/docs"

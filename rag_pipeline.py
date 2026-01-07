@@ -99,7 +99,6 @@ def answer_query(query: str, use_web: bool = True):
     route = classify_query(query)
     raw_context = assemble_context(query, route, use_web)
     context = strip_source_tags(raw_context)
-
     llm = load_local_llm()
 
     prompt = f"""
