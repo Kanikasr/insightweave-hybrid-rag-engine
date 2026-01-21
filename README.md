@@ -113,7 +113,7 @@ InsightWeave solves this by:
 
 ### 1️⃣ Clone Repository
 ```bash
-git clone https://github.com/<your-username>/insightweave-hybrid-rag-engine.git
+git clone https://github.com/Kanikasr/insightweave-hybrid-rag-engine.git
 cd insightweave_hybrid_rag
 ```
 
